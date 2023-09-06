@@ -4,18 +4,22 @@ $sub_steps = 2
 $all_objects = []
 $frame_elapsed_time = 0.0
 $gravity = Vec2.new(0.0, -1000.0)
-$size = 60.0
 $spawn_timer = 0
 $spawn_rate = 3
-$spawn_limit = 276
 $spawn_counter = 0
 
 $c_create_time = 0
 $c_resolve_time = 0
+$sqrt_time = 0
 
 $debug = false
 
+# $size = 60.0
+# $use_saved_colors = true
+# $spawn_limit = 276
+$size = 31.0
 $use_saved_colors = false
+$spawn_limit = 8376
 
 $field_width = 1280
 $field_height = 720
@@ -34,6 +38,8 @@ def tick args
   update_time_total = 0
   $c_create_time = 0
   $c_resolve_time = 0
+  $sqrt_time = 0
+
   $sub_steps.times do
 
     t = Time.now
@@ -49,6 +55,7 @@ def tick args
   update_time_total = (update_time_total * 1000).to_i
   $c_create_time = ($c_create_time * 1000).to_i
   $c_resolve_time = ($c_resolve_time * 1000).to_i
+  $sqrt_time = ($sqrt_time * 1000).to_i
 
   if $frame_elapsed_time < 0.014 && $spawn_timer.elapsed? && $all_objects.length < $spawn_limit
     $all_objects << new_object(20, 450, 8.9, 2.1)
@@ -68,7 +75,7 @@ def tick args
       x: 520,
       y: 700,
       text: "s:#{args.gtk.current_framerate_calc} n:#{$all_objects.size} c:#{collision_time_total} u:#{update_time_total} t:#{($frame_elapsed_time * 1000).to_i}",
-      text: sprintf('s:%02d n:%04d c:%02d-%02d-%02d u:%02d t:%02d', args.gtk.current_framerate_calc, $all_objects.size, collision_time_total, $c_create_time, $c_resolve_time, update_time_total, $frame_elapsed_time * 1000),
+      text: sprintf('s:%02d n:%04d c:%02d-%02d-%02d-%02d u:%02d t:%02d', args.gtk.current_framerate_calc, $all_objects.size, collision_time_total, $c_create_time, $c_resolve_time, $sqrt_time, update_time_total, $frame_elapsed_time * 1000),
       size_enum: 1,
       vertical_alignment_enum: 1,
       r: 0, g: 0, b: 0,
@@ -81,8 +88,6 @@ def tick args
   if args.inputs.keyboard.key_down.backspace
     $debug = !$debug
   end
-
-  # args.outputs.primitives << args.gtk.current_framerate_primitives
 
   $frame_elapsed_time = Time.now - frame_start_time
 end
@@ -160,10 +165,11 @@ def setup args
 end
 
 def collisions
-  collisions_vertical_grid_with_find_intersect
+  # collisions_vertical_grid
+  collisions_grid
 end
 
-def collisions_vertical_grid_with_find_intersect
+def collisions_vertical_grid
 
   t = Time.now
   grid_size = ($field_width / $size).to_i
@@ -182,21 +188,21 @@ def collisions_vertical_grid_with_find_intersect
     next if col.empty?
 
     if index == 0
-      check_columns(col, grid[index+1])
+      check_cells(col, grid[index+1])
     elsif index == grid_size - 1
-      check_columns(col, grid[index-1])
+      check_cells(col, grid[index-1])
     else
-      check_columns(col, grid[index+1])
-      check_columns(col, grid[index-1])
+      check_cells(col, grid[index+1])
+      check_cells(col, grid[index-1])
     end
 
-    check_columns(col, col)
+    check_cells(col, col)
   end
 
   $c_resolve_time += Time.now - t
 end
 
-def check_columns col1, col2
+def check_cells col1, col2
   return if col2.empty?
 
   r = $size / 2.0
@@ -216,24 +222,75 @@ def check_columns col1, col2
 
       if object_to_check != potential_collision
         outer_position = object_to_check[:position]
+        ox = outer_position.x
+        oy = outer_position.y
         inner_position = potential_collision[:position]
-        diff = outer_position - inner_position
-        d2 = diff.length_sq
-        # d2 = diff.x * diff.x + diff.y * diff.y
+        ix = inner_position.x
+        iy = inner_position.y
+
+        dx = ox - ix
+        dy = oy - iy
+        d2 = dx * dx + dy * dy
         if d2 < quick_check
+
           distance = Math::sqrt(d2)
+
           delta = ($size - distance) * 0.5
-          half_distance = diff.div_scalar!(distance).mul_scalar!(delta)
-          # half_distance = n.mul_scalar(delta)
-          outer_position.add!(half_distance)
-          inner_position.sub!(half_distance)
+          hx = (dx / distance) * delta
+          hy = (dy / distance) * delta
+
+          # updated_outer_position = Vec2.new(ox + hx, oy + hy)
+          # updated_inner_position = Vec2.new(ix - hx, iy - hy)
+          outer_position.set!(ox + hx, oy + hy)
+          inner_position.set!(ix - hx, iy - hy)
         end
+
       end
 
       collision_index += 1
     end
 
     i += 1
+  end
+end
+
+
+def collisions_grid
+
+  grid_width = (1280/$size).to_i + 2
+  grid_height = (720/$size).to_i + 2
+  grid = Array.new(grid_height * grid_width) {Array.new}
+
+  Fn.each $all_objects do |object|
+    grid_index_x = (object[:position].x.to_i / $size.to_i).to_i + 1
+    grid_index_y = (object[:position].y.to_i / $size.to_i).to_i + 1
+    grid[grid_index_y * grid_width + grid_index_x].push(object)
+  end
+
+  row = 0
+  while row < grid_height
+    col = 0
+    while col < grid_width
+
+      center_col = grid[row * grid_width + col]
+      if center_col.empty?
+        col += 1
+        next
+      end
+
+      check_cells(center_col, center_col)
+
+      check_cells(center_col, grid[(row + 1) * grid_width + col])     # n
+      check_cells(center_col, grid[(row + 1) * grid_width + col + 1]) # ne
+      check_cells(center_col, grid[row * grid_width + col + 1])       # e
+      check_cells(center_col, grid[(row - 1) * grid_width + col + 1]) # se
+      check_cells(center_col, grid[(row - 1) * grid_width + col])     # s
+      check_cells(center_col, grid[(row - 1) * grid_width + col - 1]) # sw
+      check_cells(center_col, grid[row * grid_width + col - 1])       # w
+      check_cells(center_col, grid[(row + 1) * grid_width + col - 1]) # nw
+      col += 1
+    end
+    row += 1
   end
 end
 
