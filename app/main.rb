@@ -17,7 +17,7 @@ $debug = false
 # $size = 60.0
 # $use_saved_colors = true
 # $spawn_limit = 276
-$size = 31.0
+$size = 15.0
 $use_saved_colors = false
 $spawn_limit = 8376
 
@@ -152,13 +152,6 @@ end
 
 def render args
   args.outputs.sprites << $all_objects
-  # args.outputs.borders << {
-    # x: (1280 - $field_width) / 2,
-    # y: (720 - $field_width) / 2,
-    # w: $field_width,
-    # h: $field_height,
-    # r: 255,
-  # }
 end
 
 def setup args
@@ -239,8 +232,6 @@ def check_cells col1, col2
           hx = (dx / distance) * delta
           hy = (dy / distance) * delta
 
-          # updated_outer_position = Vec2.new(ox + hx, oy + hy)
-          # updated_inner_position = Vec2.new(ix - hx, iy - hy)
           outer_position.set!(ox + hx, oy + hy)
           inner_position.set!(ix - hx, iy - hy)
         end
@@ -253,7 +244,6 @@ def check_cells col1, col2
     i += 1
   end
 end
-
 
 def collisions_grid
 
