@@ -119,4 +119,4 @@ using_vals_from_arrays_dot_at: -> () {
 
 }
 
-puts result
+$gtk.console.toggle
