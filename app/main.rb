@@ -168,7 +168,6 @@ def setup args
 end
 
 def collisions
-  # collisions_vertical_grid
   collisions_grid
 end
 
