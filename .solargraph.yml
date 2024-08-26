@@ -1,0 +1,22 @@
+---
+include:
+- "app/*.rb"
+- "../../dragonruby-yard-doc/*.rb"
+exclude:
+- spec/**/*
+- test/**/*
+- vendor/**/*
+- ".bundle/**/*"
+- tmp/src_backup/archived/*.rb
+- tmp\src_backup\archived\*.rb
+- tmp\**\*
+- tmp\**\*.rb
+- tmp\*.rb
+- tmp/*.rb
+require: []
+domains: []
+reporters:
+formatter:
+require_paths: []
+plugins: []
+max_files: 5000

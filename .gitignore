@@ -1,0 +1,5 @@
+logs/
+tmp/
+builds/
+mygame/*_state.txt
+mygame/saves/*.txt

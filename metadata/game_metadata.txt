@@ -1,9 +1,9 @@
 # Remove the pound sign and leading space for the properties below before publishing your game.
-# devid=myname
-# devtitle=My Name
-# gameid=mygame
-# gametitle=My Game
-# version=0.1
+devid=owenbutler
+devtitle=Owen Butler
+gameid=dr-verlet-test
+gametitle=Verlet test
+version=1.0
 # icon=metadata/icon.png
 
 # === Flags available at all licensing tiers ===
@@ -14,7 +14,7 @@
 # === Flags available in DragonRuby Game Toolkit Pro ====
 
 # Uncomment the entry below to bytecode compile your Ruby code
-# compile_ruby=false
+compile_ruby=false
 
 # Uncomment the entry below to specify the package name for your APK
 # packageid=org.dev.gamename
